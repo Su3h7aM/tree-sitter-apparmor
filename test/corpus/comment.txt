@@ -1,0 +1,15 @@
+==================
+Comments
+==================
+
+#comment
+# new comment
+#include
+
+---
+
+(profile_file
+  (preamble
+    (comment)
+    (comment)
+    (comment)))

@@ -1,0 +1,27 @@
+==================
+Include
+==================
+
+include "/home/user/profile"
+include <abs/profile>
+
+---
+
+(profile_file
+  (preamble
+    (include
+      (abs_path))
+    (include
+      (magic_path))))
+
+==================
+!Include
+:error
+==================
+
+include /home/user/profile
+include abs/profile
+
+---
+
+

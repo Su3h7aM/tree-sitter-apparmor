@@ -1,0 +1,42 @@
+==================
+Variable assignment
+==================
+
+@{var} =  file
+@{var2} = @{var}
+@{var3} = @{var} @{var2} /usr/lib
+@{new_var} = @{var}/file
+
+---
+
+(profile_file
+    (preamble
+        (variable_assignment
+            left: (variable)
+            right: (fileglob)
+        )
+        (variable_assignment
+            left: (variable)
+            right: (fileglob
+                (variable)
+            )
+        )
+        (variable_assignment
+            left: (variable)
+            right: (fileglob
+                (variable)
+            )
+            right: (fileglob
+                (variable)
+            )
+            right: (fileglob)
+        )
+        (variable_assignment
+            left: (variable)
+            right: (fileglob
+                (variable)
+            )
+            right: (fileglob)
+        )
+    )
+)
