@@ -8,133 +8,146 @@
 // @ts-check
 
 module.exports = grammar({
-	name: "apparmor",
+    name: "apparmor",
 
-	rules: {
-		profile_file: ($) => seq($.preamble, repeat($.profile)),
+    //extras: _ => [/\n/],
 
-		preamble: ($) =>
-			repeat1(choice($.comment, $.include, $.abi, $.variable_assignment)),
+    conflicts: ($) => [
+        [$.variable_assignment, $.fileglob],
+        [$.profile, $.fileglob],
+    ],
 
-		integer: ($) => /[+-]?\d+/,
+    //precedences: ($) => [[$.identifier, $.access]],
 
-		_identifier: ($) => /[0-9A-Za-z._\-\/]+/,
+    word: ($) => $._identifier,
 
-		fileglob: ($) =>
-			prec(2, repeat1(choice($._identifier, $.variable, $.aare))),
+    rules: {
+        profile_file: ($) => seq($.preamble, repeat($.profile)),
 
-		aare: ($) =>
-			choice(
-				seq("{", optional(","), commaSep1($._identifier), "}"),
-				seq("[", optional("^"), $._identifier, "]"),
-				"?",
-				"*",
-				"^",
-			),
+        preamble: ($) =>
+            repeat1(choice($.comment, $.abi, $.include, $.variable_assignment)),
 
-		comment: ($) => seq("#", /.+/),
+        integer: (_) => /[+-]?\d+/,
 
-		include: ($) => seq("include", choice($.abs_path, $.magic_path)),
+        _identifier: (_) => /[a-zA-Z0-9\.\-\_\/]+/,
 
-		abi: ($) => seq("abi ", $.magic_path, ","),
+        identifier: ($) => $._identifier,
 
-		variable: ($) => seq("@{", $._identifier, "}"),
+        fileglob: ($) =>
+            prec(3, repeat1(choice($.identifier, $.aare, seq($.variable, "/")))),
 
-		variable_assignment: ($) =>
-			prec.right(
-				seq(
-					field("left", $.variable),
-					choice("=", "+="),
-					field("right", seq(repeat1($.fileglob), "\n")),
-				),
-			),
+        aare: ($) =>
+            choice(
+                seq("{", optional(","), commaSep1($._identifier), "}"),
+                seq("[", optional("^"), $._identifier, "]"),
+                "?",
+                "^",
+                "**",
+                "*",
+            ),
 
-		abs_path: ($) => seq('"', $._identifier, '"'),
+        comment: (_) => token(prec(-10, /#.*/)),
 
-		magic_path: ($) => seq("<", $._identifier, ">"),
+        include: ($) =>
+            seq(choice("include", "#include"), choice($.abs_path, $.magic_path)),
 
-		profile: ($) =>
-			seq(
-				"profile",
-				$.fileglob,
-				$.fileglob,
-				optional($.profile_flags),
-				"{",
-				repeat(choice($.comment, $.include)),
-				optional($.rules),
-				"}",
-			),
+        abi: ($) => seq("abi", $.magic_path, ","),
 
-		profile_flags: ($) =>
-			seq(optional("flags="), "(", commaSep1($.profile_flag), ")"),
+        variable: ($) => seq("@{", field("name", $.identifier), "}"),
 
-		profile_mode: ($) =>
-			choice(
-				"enforce",
-				"complain",
-				"kill",
-				"default_allow",
-				"unconfined",
-				"prompt",
-			),
+        variable_assignment: ($) =>
+            seq(
+                field("left", $.variable),
+                choice("=", "+="),
+                field("right", sep1(choice($.variable, $.identifier, $.fileglob), " ")),
+            ),
 
-		profile_flag: ($) =>
-			choice(
-				$.profile_mode,
-				"audit", // Audit mode
-				"mediate_deleted",
-				"attach_disconnected",
-				seq("attach_disconneced.path=", $.abs_path),
-				"chroot_relative",
-				"debug",
-				"interruptible",
+        abs_path: ($) => seq('"', field("path", $.identifier), '"'),
 
-				// 'kill.signal='SIGNAL | 'error='ERROR CODE
-			),
+        magic_path: ($) => seq("<", field("path", $.identifier), ">"),
 
-		// TODO
-		rules: ($) => repeat1(seq(choice($.file_rule, $.network_rule), ",")),
+        profile: ($) =>
+            seq(
+                "profile",
+                $.identifier,
+                choice($.identifier, $.variable, $.fileglob),
+                optional($.profile_flags),
+                "{",
+                repeat(choice($.comment, $.include)),
+                optional($.rules),
+                "}",
+            ),
 
-		access_type: ($) => choice("allow", "deny"),
+        profile_flags: ($) =>
+            seq(optional("flags="), "(", commaSep1($.profile_flag), ")"),
 
-		access: ($) => choice("r", "w", "a", "l", "k", "m", $.exec_transition),
+        profile_mode: (_) =>
+            choice(
+                "enforce",
+                "complain",
+                "kill",
+                "default_allow",
+                "unconfined",
+                "prompt",
+            ),
 
-		exec_transition: ($) =>
-			choice(
-				"ix",
-				"ux",
-				"Ux",
-				"px",
-				"Px",
-				"cx",
-				"Cx",
-				"pix",
-				"Pix",
-				"cix",
-				"Cix",
-				"pux",
-				"PUx",
-				"cux",
-				"CUx",
-				"x",
-			),
+        profile_flag: ($) =>
+            choice(
+                $.profile_mode,
+                "audit", // Audit mode
+                "mediate_deleted",
+                "attach_disconnected",
+                seq("attach_disconneced.path=", $.abs_path),
+                "chroot_relative",
+                "debug",
+                "interruptible",
 
-		qualifier: ($) =>
-			choice(seq("priority=", $.integer), "audit", $.access_type),
+                // 'kill.signal='SIGNAL | 'error='ERROR CODE
+            ),
 
-		file_rule: ($) =>
-			seq(
-				optional($.qualifier),
-				optional("owner"),
-				choice(
-					seq($.fileglob, repeat1($.access)),
-					seq($.fileglob, repeat1($.access), optional(seq("->", $.fileglob))),
-				),
-			),
+        // TODO
+        rules: ($) => repeat1(seq(choice($.file_rule, $.network_rule), ",")),
 
-		// TODO
-		network_rule: ($) => seq("network", $._identifier, $._identifier),
-	},
+        access_type: (_) => choice("allow", "deny"),
+
+        access: ($) => choice(/[rwalkm]+/, $.exec_transition),
+
+        exec_transition: (_) =>
+            choice(
+                "ix",
+                "ux",
+                "Ux",
+                "px",
+                "Px",
+                "cx",
+                "Cx",
+                "pix",
+                "Pix",
+                "cix",
+                "Cix",
+                "pux",
+                "PUx",
+                "cux",
+                "CUx",
+                "x",
+            ),
+
+        qualifier: ($) =>
+            choice(seq("priority=", $.integer), "audit", $.access_type),
+
+        file_rule: ($) =>
+            seq(
+                optional($.qualifier),
+                optional("owner"),
+                $.fileglob,
+                " ",
+                $.access,
+                optional(seq("->", $.fileglob)),
+            ),
+
+        // TODO
+        network_rule: ($) => seq("network", $._identifier, $._identifier),
+    },
 });
 
 /**
@@ -147,7 +160,7 @@ module.exports = grammar({
  * @returns {SeqRule}
  */
 function sep1(rule, separator) {
-	return seq(rule, repeat(seq(separator, rule)));
+    return seq(rule, repeat(seq(separator, rule)));
 }
 
 /**
@@ -158,7 +171,7 @@ function sep1(rule, separator) {
  * @returns {SeqRule}
  */
 function commaSep1(rule) {
-	return seq(rule, repeat(seq(",", rule)));
+    return seq(rule, repeat(seq(",", rule)));
 }
 
 /**
@@ -169,5 +182,5 @@ function commaSep1(rule) {
  * @returns {ChoiceRule}
  */
 function commaSep(rule) {
-	return optional(commaSep1(rule));
+    return optional(commaSep1(rule));
 }
