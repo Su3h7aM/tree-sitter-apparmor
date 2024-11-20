@@ -1,0 +1,50 @@
+# ----------------------------------------------------
+# This profile was adapted from the public repository:
+# https://github.com/roddhjav/apparmor.d
+# Original Author: Alexandre Pujol <alexandre@pujol.io>
+# ----------------------------------------------------
+
+# Simple test profile for the AppArmorProfileFile.String() method
+
+abi <abi/4.0>,
+
+alias /mnt/usr -> /usr,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/foo @{lib}/foo
+
+profile foo @{exec_path} xattrs=(security.tagged=allowed) flags=(complain attach_disconnected) {
+    include <abstractions/base>
+    include <abstractions/nameservice-strict>
+
+    set rlimit nproc <= 200,
+
+    capability dac_read_search,
+    capability dac_override,
+
+    network inet stream,
+    network inet6 stream,
+
+    mount fstype=fuse.portal options=(rw rbind) @{run}/user/@{uid}/ -> /, # failed perms check
+
+    umount @{run}/user/@{uid}/,
+
+    signal receive set=term peer=at-spi-bus-launcher,
+
+    ptrace read peer=nautilus,
+
+    unix (send receive) type=stream addr=@/tmp/.ICE-unix/1995 peer=(label=gnome-shell, addr=none),
+
+    dbus bind bus=session name=org.gnome.*,
+    dbus receive bus=system path=/org/freedesktop/DBus
+        interface=org.freedesktop.DBus
+        member=AddMatch
+        peer=(name=:1.3, label=power-profiles-daemon),
+
+    /opt/intel/oneapi/compiler/*/linux/lib/*.so./* rm,
+    @{PROC}/@{pid}/task/@{tid}/comm rw,
+    @{sys}/devices/@{pci}/class r,
+
+    include if exists <local/foo>
+}

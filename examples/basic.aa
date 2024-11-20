@@ -1,0 +1,18 @@
+# Basic profile for testing
+
+abi <abi/4.0>,
+
+include <tunables/global>
+
+@{libs} = /usr/lib32/ /usr/lib64/
+@{some_lib} = @{lib64}/lib.so
+
+profile p_name /usr/bin/exec flags=(complain) {
+    include <abstractions/base>
+
+    network inet stream,
+
+    /usr/bin/exec rw,
+    @{libs}/** r,
+
+}
