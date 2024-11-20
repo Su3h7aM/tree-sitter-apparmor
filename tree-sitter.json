@@ -1,0 +1,36 @@
+{
+  "grammars": [
+    {
+      "name": "apparmor",
+      "camelcase": "Apparmor",
+      "scope": "source.apparmor",
+      "path": ".",
+      "file-types": ["apparmor"],
+      "first-line-regex": "^# vim:syntax=apparmor",
+      "highlights": "queries/highlights.scm",
+      "injection-regex": "^apparmor$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Apparmor profiles",
+    "authors": [
+      {
+        "name": "Su3h7aM",
+        "email": "matheusgasorce@gmail.com"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/Su3h7aM/tree-sitter-apparmor"
+    }
+  },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "node": true,
+    "python": false,
+    "rust": false,
+    "swift": false
+  }
+}
