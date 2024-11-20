@@ -10,9 +10,11 @@ include <abs/profile>
 (profile_file
   (preamble
     (include
-      (abs_path))
+      (abs_path
+        (identifier)))
     (include
-      (magic_path))))
+      (magic_path
+        (identifier)))))
 
 ==================
 !Include

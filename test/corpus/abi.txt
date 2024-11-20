@@ -10,9 +10,11 @@ abi <abi/4.0>,
 (profile_file
   (preamble
     (abi
-      (magic_path))
+      (magic_path
+        (identifier)))
     (abi
-      (magic_path))))
+      (magic_path
+        (identifier)))))
 
 ==================
 !ABI

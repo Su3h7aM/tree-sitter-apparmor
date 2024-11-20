@@ -10,33 +10,28 @@ Variable assignment
 ---
 
 (profile_file
-    (preamble
-        (variable_assignment
-            left: (variable)
-            right: (fileglob)
-        )
-        (variable_assignment
-            left: (variable)
-            right: (fileglob
-                (variable)
-            )
-        )
-        (variable_assignment
-            left: (variable)
-            right: (fileglob
-                (variable)
-            )
-            right: (fileglob
-                (variable)
-            )
-            right: (fileglob)
-        )
-        (variable_assignment
-            left: (variable)
-            right: (fileglob
-                (variable)
-            )
-            right: (fileglob)
-        )
-    )
-)
+  (preamble
+    (variable_assignment
+      left: (variable
+        name: (identifier))
+      right: (identifier))
+    (variable_assignment
+      left: (variable
+        name: (identifier))
+      right: (variable
+        name: (identifier)))
+    (variable_assignment
+      left: (variable
+        name: (identifier))
+      right: (variable
+        name: (identifier))
+      right: (variable
+        name: (identifier))
+      right: (identifier))
+    (variable_assignment
+      left: (variable
+        name: (identifier))
+      right: (fileglob
+        (variable
+          name: (identifier))
+        (identifier)))))
