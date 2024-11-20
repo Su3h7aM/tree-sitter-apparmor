@@ -4,15 +4,16 @@ abi <abi/4.0>,
 
 include <tunables/global>
 
+@{exec} = /usr/bin/exe{, -bin, .sh}
 @{libs} = /usr/lib32/ /usr/lib64/
-@{some_lib} = @{lib64}/lib.so
+@{some_lib} = @{lib64}/** @{lib32}/lib.so
 
-profile p_name /usr/bin/exec flags=(complain) {
+profile p_name @{exec} flags=(complain) {
     include <abstractions/base>
 
     network inet stream,
 
-    /usr/bin/exec rw,
-    @{libs}/** r,
+    /usr/bin/exec Pix,
+    @{libs}/** rw,
 
 }
